@@ -27,15 +27,30 @@ def information_gain(X, y, element_index):
     """
     s = set([row[element_index] for row in X])
     entropy_y = entropy_multi(y)
-    entropy_condition = 0
+    entropy_condition = float("inf")
     for item in s:
-        array = []
+        array_left = []
+        array_right = []
         for i in range(len(X)):
-            if X[i][element_index] == item:
-                array.append(y[i])
-        entropy_condition += len(array) / len(X) * entropy_multi(array)
+            if X[i][element_index] <= item:
+                array_left.append(y[i])
+            else:
+                array_right.append(y[i])
+        entropy_condition = min(entropy_condition, len(array_left) / len(X) * entropy_multi(array_left) +
+                                len(array_right) / len(X) * entropy_multi(array_right))
     return entropy_y - entropy_condition
 
 
 if __name__ == "__main__":
-    print(entropy_multi([1, 1, 1, 1, 1, 0]))
+    X = [[0, 1, 0],
+       [1, 1, 0],
+       [1, 1, 1],
+       [1, 0, 1],
+       [1, 1, 1],
+       [2, 0, 0],
+       [0, 0, 0],
+       [2, 1, 0],
+       [1, 0, 0],
+       [0, 1, 1]]
+    y = [0, 0, 1, 0, 1, 1, 0, 1, 1, 1]
+    print(information_gain(X, y, 2), entropy_multi(y))
