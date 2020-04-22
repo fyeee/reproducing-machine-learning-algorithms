@@ -1,6 +1,51 @@
 import math
 
 
+class DecisionTreeClassifier:
+    def __init__(self, max_depth=None):
+        self.max_depth = max_depth
+        self.root = None
+
+    def fit(self, X, y, node={}, depth=0):
+        if node is None:
+            return None
+        elif len(y) == 0:
+            return None
+        elif all(x == y[0] for x in y):
+            return {"val": y[0]}
+        elif depth > self.max_depth:
+            return None
+        else:
+            node["entropy"] = entropy_multi(y)
+            col, cutoff = best_split(X, y)
+            node["feature"] = col
+            node["cutoff"] = cutoff
+            X_left, X_right = split_data_on_val(X, X, col, cutoff)
+            y_left, y_right = split_data_on_val(y, X, col, cutoff)
+            node["left"] = self.fit(X_left, y_left, {}, depth + 1)
+            node["right"] = self.fit(X_right, y_right, {}, depth + 1)
+        self.root = node
+        return node
+
+    # def predict(self, X):
+    #     pred = []
+    #     for row in X:
+    #         node = self.root
+    #         while node:
+    #             if row[node["feature"]] < node:
+
+
+def split_data_on_val(data, ref_data, col, val):
+    result_left = []
+    result_right = []
+    for i, row in enumerate(ref_data):
+        if row[col] < val:
+            result_left.append(data[i])
+        elif row[col] >= val:
+            result_right.append(data[i])
+    return result_left, result_right
+
+
 def entropy(count, n):
     return -1 * math.log(count / n, 2) * (count / n)
 
@@ -20,6 +65,18 @@ def entropy_multi(array):
         total_entropy += entropy(count, n)
     return total_entropy
 
+def best_split(X, y):
+    max_info_gain = float("-inf")
+    best_split_feature = None
+    best_cutoff = None
+    for i in range(len(X[0])):
+        info_gain, cutoff = information_gain(X, y, i)
+        if info_gain > max_info_gain:
+            max_info_gain = info_gain
+            best_split_feature = i
+            best_cutoff = cutoff
+    return best_split_feature, best_cutoff
+
 
 def information_gain(X, y, element_index):
     """
@@ -28,17 +85,21 @@ def information_gain(X, y, element_index):
     s = set([row[element_index] for row in X])
     entropy_y = entropy_multi(y)
     entropy_condition = float("inf")
+    best_split = None
     for item in s:
         array_left = []
         array_right = []
         for i in range(len(X)):
-            if X[i][element_index] <= item:
+            if X[i][element_index] < item:
                 array_left.append(y[i])
             else:
                 array_right.append(y[i])
-        entropy_condition = min(entropy_condition, len(array_left) / len(X) * entropy_multi(array_left) +
-                                len(array_right) / len(X) * entropy_multi(array_right))
-    return entropy_y - entropy_condition
+        curr_entropy = len(array_left) / len(X) * entropy_multi(array_left) + len(array_right) / len(X) * \
+                       entropy_multi(array_right)
+        if curr_entropy < entropy_condition:
+            entropy_condition = curr_entropy
+            best_split = item
+    return entropy_y - entropy_condition, best_split
 
 
 if __name__ == "__main__":
@@ -53,4 +114,6 @@ if __name__ == "__main__":
        [1, 0, 0],
        [0, 1, 1]]
     y = [0, 0, 1, 0, 1, 1, 0, 1, 1, 1]
+    clf = DecisionTreeClassifier(max_depth=3)
+    print(clf.fit(X, y))
     print(information_gain(X, y, 2), entropy_multi(y))
