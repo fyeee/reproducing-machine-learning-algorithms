@@ -1,5 +1,7 @@
 import math
-
+# for testing the algo
+from sklearn import datasets
+from sklearn.model_selection import train_test_split
 
 class DecisionTreeClassifier:
     def __init__(self, max_depth=None):
@@ -27,12 +29,19 @@ class DecisionTreeClassifier:
         self.root = node
         return node
 
-    # def predict(self, X):
-    #     pred = []
-    #     for row in X:
-    #         node = self.root
-    #         while node:
-    #             if row[node["feature"]] < node:
+    def predict(self, X):
+        pred = []
+        for row in X:
+            node = self.root
+            while node:
+                if len(node.keys()) == 1:
+                    pred.append(node["val"])
+                    break
+                if row[node["feature"]] < node["cutoff"]:
+                    node = node["left"]
+                else:
+                    node = node["right"]
+        return pred
 
 
 def split_data_on_val(data, ref_data, col, val):
@@ -102,18 +111,20 @@ def information_gain(X, y, element_index):
     return entropy_y - entropy_condition, best_split
 
 
+def accuracy(prediction, actual):
+    count = 0
+    for i in range(len(prediction)):
+        if prediction[i] == actual[i]:
+            count += 1
+    return count/len(prediction)
+
+
 if __name__ == "__main__":
-    X = [[0, 1, 0],
-       [1, 1, 0],
-       [1, 1, 1],
-       [1, 0, 1],
-       [1, 1, 1],
-       [2, 0, 0],
-       [0, 0, 0],
-       [2, 1, 0],
-       [1, 0, 0],
-       [0, 1, 1]]
-    y = [0, 0, 1, 0, 1, 1, 0, 1, 1, 1]
-    clf = DecisionTreeClassifier(max_depth=3)
-    print(clf.fit(X, y))
-    print(information_gain(X, y, 2), entropy_multi(y))
+    data = datasets.load_iris()
+    X = data["data"].tolist()
+    y = data["target"].tolist()
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33)
+    clf = DecisionTreeClassifier(max_depth=6)
+    print(clf.fit(X_train, y_train))
+    pred = clf.predict(X_test)
+    print(accuracy(pred, y_test))
