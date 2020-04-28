@@ -3,6 +3,7 @@ import math
 from sklearn import datasets
 from sklearn.model_selection import train_test_split
 
+
 class DecisionTreeClassifier:
     def __init__(self, max_depth=None):
         self.max_depth = max_depth
@@ -74,6 +75,7 @@ def entropy_multi(array):
         total_entropy += entropy(count, n)
     return total_entropy
 
+
 def best_split(X, y):
     max_info_gain = float("-inf")
     best_split_feature = None
@@ -116,7 +118,7 @@ def accuracy(prediction, actual):
     for i in range(len(prediction)):
         if prediction[i] == actual[i]:
             count += 1
-    return count/len(prediction)
+    return count / len(prediction)
 
 
 if __name__ == "__main__":
